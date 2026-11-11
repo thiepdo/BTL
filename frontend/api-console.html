@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Home · API Control Center</title>
+  <style>
+    :root{font-family:Inter,"Segoe UI",sans-serif;color:#172033;background:#f3f6fb;font-synthesis:none}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1180px;margin:auto;padding:28px 20px 48px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}h1{font-size:26px;margin:0 0 5px}h2{font-size:16px;margin:0}.muted{color:#68758a;font-size:13px}.card{background:white;border:1px solid #e0e6ef;border-radius:14px;padding:18px;box-shadow:0 3px 14px #17345b08}.grid{display:grid;gap:14px}.status-grid{grid-template-columns:repeat(3,1fr);margin-bottom:14px}.main-grid{grid-template-columns:1.15fr .85fr;align-items:start}.lower-grid{grid-template-columns:1fr 1fr;margin-top:14px}.label{color:#68758a;font-size:12px}.value{font-size:28px;font-weight:700;margin:5px 0}.status{display:inline-flex;align-items:center;gap:7px;font-weight:600}.dot{width:9px;height:9px;border-radius:50%;background:#9aa5b5}.dot.ok{background:#16a36a}.dot.bad{background:#dc3545}.device{display:flex;align-items:center;justify-content:space-between;border:1px solid #e4e9f1;border-radius:10px;padding:13px;margin-top:12px}.device-actions{display:flex;gap:8px}button,a.btn{border:0;border-radius:8px;padding:9px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none}.on{background:#16a36a;color:white}.off{background:#eef1f6;color:#253149}.refresh{background:#245eea;color:white}.quiet{background:#eef4ff;color:#245eea}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:9px 7px;border-bottom:1px solid #edf0f5}th{color:#68758a;font-weight:600}.table-scroll{overflow:auto;max-height:320px}.notice{background:#fff8e7;border:1px solid #f1dfa9;border-radius:10px;padding:12px 14px;margin-top:14px;font-size:12px;color:#6e5717}.api-list{display:flex;flex-wrap:wrap;gap:7px}.api-list code{background:#f1f4f8;border-radius:6px;padding:6px 8px;font-size:11px}.log{font:12px ui-monospace,Consolas,monospace;background:#101827;color:#dbeafe;padding:12px;border-radius:9px;white-space:pre-wrap;max-height:180px;overflow:auto;margin-top:12px}.actions{display:flex;gap:8px;align-items:center}#updated{font-size:11px;color:#68758a}@media(max-width:760px){.status-grid,.main-grid,.lower-grid{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}.value{font-size:24px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div><h1>Smart Home · API Control Center</h1><div class="muted">Một màn hình để theo dõi cảm biến, điều khiển ESP8266 và xem lịch sử API.</div></div>
+      <div class="actions"><span id="updated">Đang kết nối...</span><button class="refresh" id="refresh">Làm mới</button></div>
+    </header>
+
+    <section class="card" style="margin-bottom:14px"><div class="row"><div><h2>Xác thực API</h2><div class="muted">Nhập mật khẩu để mở quyền gửi lệnh bật/tắt đèn. Mật khẩu chỉ giữ trong bộ nhớ của tab này.</div></div><button class="off" id="clear-password">Xóa mật khẩu</button></div><div class="actions" style="flex-wrap:wrap"><input id="api-password" type="password" autocomplete="current-password" placeholder="Mật khẩu API" style="padding:9px;border:1px solid #d7deea;border-radius:8px"><button class="refresh" id="use-password">Xác thực</button></div><div class="muted" id="auth-status" style="margin-top:9px">Chỉ cần nhập mật khẩu API.</div></section>
+
+    <section class="grid status-grid">
+      <article class="card"><div class="label">ESP8266 / cảm biến</div><div class="value status"><i class="dot" id="esp-dot"></i><span id="esp-state">Đang kiểm tra</span></div><div class="muted" id="last-seen">Chưa nhận dữ liệu</div></article>
+      <article class="card"><div class="label">Kết nối MQTT</div><div class="value status"><i class="dot" id="mqtt-dot"></i><span id="mqtt-state">Đang kiểm tra</span></div><div class="muted">Backend ↔ MQTT broker</div></article>
+      <article class="card"><div class="label">MySQL</div><div class="value status"><i class="dot" id="db-dot"></i><span id="db-state">Đang kiểm tra</span></div><div class="muted">Trạng thái từ API health</div></article>
+    </section>
+
+    <section class="grid main-grid">
+      <article class="card">
+        <div class="row"><div><h2>Dữ liệu cảm biến mới nhất</h2><div class="muted">GET /api/sensors/latest</div></div><button class="quiet" data-refresh>Đọc lại</button></div>
+        <div class="grid status-grid">
+          <div><div class="label">Nhiệt độ</div><div class="value"><span id="temp">--</span> <small>°C</small></div></div>
+          <div><div class="label">Độ ẩm</div><div class="value"><span id="hum">--</span> <small>%</small></div></div>
+          <div><div class="label">Ánh sáng</div><div class="value"><span id="light">--</span> <small>ADC</small></div></div>
+        </div>
+        <div class="muted">Thời điểm mẫu: <span id="sample-time">--</span> · ADC không phải đơn vị lux đã hiệu chuẩn.</div>
+      </article>
+      <article class="card">
+        <div class="row"><div><h2>Điều khiển đèn</h2><div class="muted">POST /api/devices/{id}</div></div><button class="quiet" data-refresh>Đọc trạng thái</button></div>
+        <div id="devices"></div>
+        <div class="muted" style="margin-top:10px">HTTP 202 nghĩa là lệnh đã được gửi; trạng thái thực tế cập nhật sau phản hồi MQTT.</div>
+      </article>
+    </section>
+
+    <section class="grid lower-grid">
+      <article class="card"><div class="row"><div><h2>Dòng dữ liệu cảm biến</h2><div class="muted">GET /api/sensors?limit=10</div></div></div><div class="table-scroll"><table><thead><tr><th>Loại</th><th>Giá trị</th><th>Thời gian</th></tr></thead><tbody id="sensor-rows"><tr><td colspan="3">Đang tải...</td></tr></tbody></table></div></article>
+      <article class="card"><div class="row"><div><h2>Lịch sử điều khiển</h2><div class="muted">GET /api/history?limit=10</div></div></div><div class="table-scroll"><table><thead><tr><th>Thiết bị</th><th>Hành động</th><th>Trạng thái</th><th>Thời gian</th></tr></thead><tbody id="history-rows"><tr><td colspan="4">Đang tải...</td></tr></tbody></table></div></article>
+    </section>
+
+    <section class="card" style="margin-top:14px"><div class="row"><div><h2>Các API đang được gộp trên màn hình này</h2><div class="muted">Các request được gọi tự động; bạn không cần mở từng URL riêng.</div></div><a class="btn quiet" href="/api/openapi.yaml" target="_blank">OpenAPI YAML</a></div><div class="api-list"><code>GET /api/health</code><code>GET /api/auth/verify</code><code>GET /api/sensors/latest</code><code>GET /api/sensors</code><code>GET /api/history</code><code>GET /api/devices</code><code>POST /api/devices/{id}</code></div><pre class="log" id="log">Sẵn sàng.</pre></section>
+    <div class="notice">Dashboard và các thao tác đọc công khai. Chỉ lệnh bật/tắt đèn cần gửi `X-API-Password`.</div>
+  </main>
+  <script>
+    const API='/api';
+    let apiPassword='';
+    const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function log(message){const el=document.getElementById('log');el.textContent=`${new Date().toLocaleTimeString()}  ${message}\n`+el.textContent;}
+    async function get(path){const headers=apiPassword?{'X-API-Password':apiPassword}:{};const r=await fetch(API+path,{headers});const body=await r.json();if(!r.ok)throw new Error(body.error||body.message||`HTTP ${r.status}`);return body;}
+    function setAuthStatus(message){document.getElementById('auth-status').textContent=message;}
+    async function authenticate(){apiPassword=document.getElementById('api-password').value;try{await get('/auth/verify');setAuthStatus('Mật khẩu đúng; có thể điều khiển đèn.');log('Xác thực API thành công');await refreshAll();}catch(e){apiPassword='';setAuthStatus(e.message);log(`Authentication: ${e.message}`);renderAll();}}
+    async function refreshAll(){
+      document.getElementById('updated').textContent='Đang cập nhật...';
+      const jobs=[
+        get('/health').then(s=>{[['esp',s.sensorOnline],['mqtt',s.mqttConnected],['db',s.ok]].forEach(([k,v])=>{document.getElementById(`${k}-state`).textContent=v?'Online':'Offline';document.getElementById(`${k}-dot`).className=`dot ${v?'ok':'bad'}`;});document.getElementById('last-seen').textContent=s.lastSensorAt?`Mẫu MQTT gần nhất: ${s.lastSensorAt}`:'Chưa nhận mẫu MQTT';}),
+      ];
+      jobs.push(
+        get('/sensors/latest').then(d=>{document.getElementById('temp').textContent=d.temp;document.getElementById('hum').textContent=d.hum;document.getElementById('light').textContent=d.light;document.getElementById('sample-time').textContent=d.time;}),
+        get('/devices').then(rows=>{document.getElementById('devices').innerHTML=rows.map(d=>`<div class="device"><div><strong>${esc(d.name)}</strong><div class="muted">Trạng thái: ${esc(d.state)}</div></div><div class="device-actions"><button class="on" data-device="${d.id}" data-on="true" ${!apiPassword||d.on?'disabled':''}>Bật</button><button class="off" data-device="${d.id}" data-on="false" ${!apiPassword||!d.on?'disabled':''}>Tắt</button></div></div>`).join('')||'<div class="muted">Chưa có thiết bị LED.</div>';}),
+        get('/sensors?limit=10').then(r=>{document.getElementById('sensor-rows').innerHTML=r.data.map(d=>`<tr><td>${esc(d.type)}</td><td>${esc(d.value)} ${esc(d.unit)}</td><td>${esc(d.time)}</td></tr>`).join('')||'<tr><td colspan="3">Chưa có dữ liệu</td></tr>';}).catch(e=>{document.getElementById('sensor-rows').innerHTML=`<tr><td colspan="3">${esc(e.message)}</td></tr>`;}),
+        get('/history?limit=10').then(r=>{document.getElementById('history-rows').innerHTML=r.data.map(d=>`<tr><td>${esc(d.device)}</td><td>${esc(d.action)}</td><td>${esc(d.status)}</td><td>${esc(d.time)}</td></tr>`).join('')||'<tr><td colspan="4">Chưa có lịch sử</td></tr>';}).catch(e=>{document.getElementById('history-rows').innerHTML=`<tr><td colspan="4">${esc(e.message)}</td></tr>`;})
+      );
+      const results=await Promise.allSettled(jobs);results.forEach((r,i)=>{if(r.status==='rejected')log(`API ${i+1}: ${r.reason.message}`);});
+      document.getElementById('updated').textContent=`Cập nhật lúc ${new Date().toLocaleTimeString()}`;
+    }
+    document.getElementById('devices').addEventListener('click',async e=>{const b=e.target.closest('button[data-device]');if(!b)return;const id=b.dataset.device,on=b.dataset.on==='true';b.disabled=true;try{const r=await fetch(`${API}/devices/${id}`,{method:'POST',headers:{'Content-Type':'application/json','X-API-Password':apiPassword},body:JSON.stringify({on})});const d=await r.json();if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);log(`POST /api/devices/${id} → ${d.status} (${d.state})`);await refreshAll();}catch(err){log(`Không điều khiển được LED${id}: ${err.message}`);setAuthStatus(err.message);await refreshAll();}});
+    function renderAll(){refreshAll();}
+    document.getElementById('use-password').addEventListener('click',authenticate);document.getElementById('clear-password').addEventListener('click',()=>{apiPassword='';document.getElementById('api-password').value='';setAuthStatus('Đã xóa mật khẩu khỏi tab này.');refreshAll();});
+    document.getElementById('refresh').addEventListener('click',refreshAll);document.querySelectorAll('[data-refresh]').forEach(b=>b.addEventListener('click',refreshAll));
+    refreshAll();setInterval(refreshAll,5000);
+  </script>
+</body>
+</html>

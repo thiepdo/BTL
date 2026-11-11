@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Smart Home - IoT Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <strong>Smart Home</strong>
+      <span>IoT Dashboard</span>
+    </div>
+    <nav class="nav">
+      <a href="#/dashboard" data-route="dashboard">Dashboard</a>
+      <a href="#/data" data-route="data">Dữ Liệu</a>
+      <a href="#/history" data-route="history">Lịch Sử</a>
+      <a href="#/profile" data-route="profile">Hồ Sơ</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ DASHBOARD ============ -->
+    <section class="page" id="page-dashboard">
+      <div class="grid-3">
+        <div class="card stat">
+          <div class="stat-label">Nhiệt Độ</div>
+          <div class="stat-value"><b id="val-temp">--</b><small class="c-orange">°C</small></div>
+          <div class="stat-sub" id="sub-temp">Cảm biến DHT11 · --</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-label">Ánh Sáng</div>
+          <div class="stat-value"><b id="val-light">--</b><small class="c-blue">ADC</small></div>
+          <div class="stat-sub" id="sub-light">LDR · thang đo 0–1023 · --</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-label">Độ Ẩm</div>
+          <div class="stat-value"><b id="val-hum">--</b><small class="c-green">%</small></div>
+          <div class="stat-sub" id="sub-hum">Cảm biến DHT11 · --</div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="card chart-card">
+          <div class="card-head">
+            <h3>Biểu Đồ Môi Trường</h3>
+            <span class="muted">10 mẫu gần nhất</span>
+          </div>
+          <div class="chart-wrap"><canvas id="envChart"></canvas></div>
+        </div>
+
+        <div class="card control-card">
+          <div class="card-head"><h3>Điều Khiển Thiết Bị</h3><a href="http://localhost:3000/api/console" class="control-link">API tổng →</a></div>
+          <div id="devices"></div>
+          <div class="muted small">Xem dashboard không cần đăng nhập; mật khẩu chỉ được hỏi khi bạn bật/tắt đèn.</div>
+          <div class="sys-status">
+            <div class="muted small">Trạng thái hệ thống</div>
+            <div class="sys-grid">
+              <span><i class="dot"></i>ESP8266: <em id="esp-status">Đang kiểm tra</em></span>
+              <span><i class="dot"></i>MQTT: <em id="mqtt-status">Đang kiểm tra</em></span>
+              <span><i class="dot"></i>DHT11: <em>Active</em></span>
+              <span><i class="dot"></i>LDR: <em>Active</em></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DỮ LIỆU CẢM BIẾN ============ -->
+    <section class="page" id="page-data">
+      <div class="page-head">
+        <h1>Dữ Liệu Cảm Biến</h1>
+        <span class="muted small" id="data-count"></span>
+      </div>
+
+      <form class="search-toolbar" id="data-search">
+        <label class="search-select" aria-label="Lọc dữ liệu">
+          <select id="d-type">
+            <option value="">Tất cả</option>
+            <option>Nhiệt độ</option>
+            <option>Độ ẩm</option>
+            <option>Ánh sáng</option>
+            <option value="time">Thời gian</option>
+          </select>
+        </label>
+        <input class="search-input" type="search" id="d-q" placeholder="Tìm kiếm chung..." />
+        <button class="search-button" type="submit">Search</button>
+      </form>
+
+      <div class="card table-card">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="id">ID <span class="arr"></span></th>
+              <th data-sort="sensor">Cảm Biến <span class="arr"></span></th>
+              <th data-sort="type">Loại Đo <span class="arr"></span></th>
+              <th data-sort="value">Giá Trị <span class="arr"></span></th>
+              <th data-sort="time">Thời Gian <span class="arr"></span></th>
+            </tr>
+          </thead>
+          <tbody id="data-body"></tbody>
+        </table>
+      </div>
+      <div class="table-controls">
+        <label class="page-size-select">Số dòng
+          <select id="d-size">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </label>
+      </div>
+      <div class="pager" id="data-pager"></div>
+    </section>
+
+    <!-- ============ LỊCH SỬ ============ -->
+    <section class="page" id="page-history">
+      <div class="page-head">
+        <h1>Lịch Sử Hoạt Động</h1>
+        <span class="counts small">
+          <span>Tổng: <b id="h-total">0</b></span>
+          <span class="c-green">BẬT: <b id="h-on">0</b></span>
+          <span class="c-red">TẮT: <b id="h-off">0</b></span>
+        </span>
+      </div>
+
+      <form class="search-toolbar history-search" id="history-search">
+        <input class="search-input" type="search" id="h-q" placeholder="Tìm kiếm (ID, Thiết bị, Ngày...)" />
+        <label class="search-select" aria-label="Lọc thiết bị">
+          <select id="h-device">
+            <option value="">Chọn thiết bị</option>
+            <option>LED1</option>
+            <option>LED2</option>
+          </select>
+        </label>
+        <label class="search-select" aria-label="Lọc hành động">
+          <select id="h-action">
+            <option value="">Hành động</option>
+            <option>BẬT</option>
+            <option>TẮT</option>
+          </select>
+        </label>
+        <label class="search-select" aria-label="Lọc trạng thái">
+          <select id="h-status">
+            <option value="">Trạng thái</option>
+            <option value="success">Thành công</option>
+            <option value="failed">Thất bại</option>
+            <option value="pending">Đang chờ</option>
+          </select>
+        </label>
+        <button class="search-button" type="submit">Search</button>
+      </form>
+
+      <div class="card table-card">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="id">ID <span class="arr"></span></th>
+              <th data-sort="device">Thiết Bị <span class="arr"></span></th>
+              <th data-sort="action">Hành Động <span class="arr"></span></th>
+              <th data-sort="desc">Trạng Thái <span class="arr"></span></th>
+              <th data-sort="time">Thời Gian <span class="arr"></span></th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+      <div class="table-controls">
+        <label class="page-size-select">Số dòng
+          <select id="h-size">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+          </select>
+        </label>
+      </div>
+      <div class="pager" id="history-pager"></div>
+    </section>
+
+    <!-- ============ HỒ SƠ ============ -->
+    <section class="page narrow" id="page-profile">
+      <div class="page-head">
+        <h1>Hồ Sơ Cá Nhân</h1>
+      </div>
+
+      <div class="profile-grid">
+        <aside class="card profile-side">
+          <div class="avatar">ĐT</div>
+          <h2>Đỗ Quang Thiệp</h2>
+          <p class="muted small center">Sinh viên Công nghệ thông tin</p>
+          <hr />
+          <dl class="kv">
+            <div>
+              <dt>Mã SV</dt>
+              <dd>B23DCCN787</dd>
+            </div>
+            <div>
+              <dt>Môn học</dt>
+              <dd class="c-purple">IOT &amp; Ứng dụng</dd>
+            </div>
+            <div>
+              <dt>Nhóm</dt>
+              <dd class="c-purple">10</dd>
+            </div>
+          </dl>
+        </aside>
+
+        <div class="profile-main">
+          <div class="card">
+
+
+
+            <div class="card">
+              <h4>Thông tin liên hệ</h4>
+              <div class="contact-grid">
+                <div><span>Điện thoại</span>0328-428-308</div>
+                <div><span>Email</span>thiepdq.b23cn787@ptit.edu.vn</div>
+
+                <div><span>Trường</span>PTIT - Khoa CNTT</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4>Sở thích</h4>
+              <div class="chips">
+                <span>Lập trình</span><span>IoT</span><span>Mã nguồn mở</span>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4>Liên kết học thuật</h4>
+              <dl class="links">
+                <div>
+                  <dt>GitHub (Nhóm):</dt>
+                  <dd><a href="https://github.com/ptit-iot-group" target="_blank"
+                      rel="noopener">github.com/ptit-iot-group</a></dd>
+                </div>
+                <div>
+                  <dt>Báo cáo (PDF):</dt>
+                  <dd><a href="#" download>Tải xuống báo cáo</a></dd>
+                </div>
+
+                <div>
+                  <dt>API (DOCX):</dt>
+                  <dd><a href="#" download>Tài liệu API DOCX</a></dd>
+                </div>
+                <div>
+                  <dt>Figma:</dt>
+                  <dd><a href="#" target="_blank" rel="noopener">Mở thiết kế trên Figma</a></dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

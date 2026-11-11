@@ -1,0 +1,168 @@
+{
+  "input": "E:\\dowload\\B\u00e1o c\u00e1o IOT -VDM.docx",
+  "fonts_by_char_count": {},
+  "direct_run_formatting_runs": 4711,
+  "direct_paragraph_formatting_paragraphs": 422,
+  "heading_like_paragraphs_not_heading_style": [
+    {
+      "para_index": 2,
+      "text": "H\u1eccC VI\u1ec6N C\u00d4NG NGH\u1ec6 B\u01afU CH\u00cdNH VI\u1ec4N TH\u00d4NG",
+      "style": "Normal"
+    },
+    {
+      "para_index": 16,
+      "text": "IOT V\u00c0 \u1ee8NG D\u1ee4NG",
+      "style": "Normal"
+    },
+    {
+      "para_index": 21,
+      "text": "Gi\u1ea3ng vi\u00ean h\u01b0\u1edbng d\u1eabn\t: Nguy\u1ec5n Qu\u1ed1c Uy H\u1ecd v\u00e0 t\u00ean sinh vi\u00ean\t: V\u0169 \u0110\u1ee9c M\u1ea1nh",
+      "style": "Normal"
+    },
+    {
+      "para_index": 22,
+      "text": " M\u00e3 sinh vi\u00ean\t: B23DCCN535",
+      "style": "Normal"
+    },
+    {
+      "para_index": 43,
+      "text": "H\u00ecnh 2.1: Lu\u1ed3ng ho\u1ea1t \u0111\u1ed9ng c\u1ee7a h\u1ec7 th\u1ed1ng",
+      "style": "Normal"
+    },
+    {
+      "para_index": 52,
+      "text": "H\u00ecnh 3.1: S\u01a1 \u0111\u1ed3 Use case t\u1ed5ng quan",
+      "style": "Normal"
+    },
+    {
+      "para_index": 58,
+      "text": "H\u00ecnh 3.2: S\u01a1 \u0111\u1ed3 tu\u1ea7n t\u1ef1 Use Case 2 - Gi\u00e1m s\u00e1t th\u00f4ng s\u1ed1 m\u00f4i tr\u01b0\u1eddng th\u1eddi gian th\u1ef1c",
+      "style": "Body Text"
+    },
+    {
+      "para_index": 65,
+      "text": "H\u00ecnh 3.3: S\u01a1 \u0111\u1ed3 tu\u1ea7n t\u1ef1 Usecase 2 - \u0110i\u1ec1u khi\u1ec3n b\u1eadt t\u1eaft thi\u1ebft b\u1ecb hai chi\u1ec1u",
+      "style": "Normal"
+    },
+    {
+      "para_index": 71,
+      "text": "H\u00ecnh 3.4: S\u01a1 \u0111\u1ed3 tu\u1ea7n t\u1ef1 Usecase 3 - Xem v\u00e0 tra c\u1ee9u d\u1eef li\u1ec7u c\u1ea3m bi\u1ebfn",
+      "style": "Normal"
+    },
+    {
+      "para_index": 77,
+      "text": "H\u00ecnh 3.5: S\u01a1 \u0111\u1ed3 tu\u1ea7n t\u1ef1 Usecase 4 - Tra c\u1ee9u l\u1ecbch s\u1eed \u0111i\u1ec1u khi\u1ec3n thi\u1ebft b\u1ecb",
+      "style": "Normal"
+    },
+    {
+      "para_index": 83,
+      "text": "H\u00ecnh 3.2: S\u01a1 \u0111\u1ed3 tu\u1ea7n t\u1ef1 Use case 5 - \u0110\u0103ng nh\u1eadp v\u00e0 x\u00e1c th\u1ef1c ng\u01b0\u1eddi d\u00f9ng",
+      "style": "Body Text"
+    },
+    {
+      "para_index": 89,
+      "text": "H\u00ecnh 3.6: S\u01a1 \u0111\u1ed3 tu\u1ea7n t\u1ef1 Use case 6 - Thu th\u1eadp d\u1eef li\u1ec7u c\u1ea3m bi\u1ebfn t\u1ef1 \u0111\u1ed9ng",
+      "style": "Body Text"
+    },
+    {
+      "para_index": 268,
+      "text": "H\u00ecnh 5.1: S\u01a1 \u0111\u1ed3 quan h\u1ec7 th\u1ef1c th\u1ec3 ERD",
+      "style": "Normal"
+    },
+    {
+      "para_index": 280,
+      "text": "H\u00ecnh 6.1: Giao di\u1ec7n M\u00e0n h\u00ecnh T\u1ed5ng quan Dashboard th\u1eddi gian th\u1ef1c",
+      "style": "Normal"
+    },
+    {
+      "para_index": 288,
+      "text": "H\u00ecnh 6.2: Giao di\u1ec7n M\u00e0n h\u00ecnh D\u1eef li\u1ec7u c\u1ea3m bi\u1ebfn",
+      "style": "Normal"
+    },
+    {
+      "para_index": 294,
+      "text": "H\u00ecnh 6.3: Giao di\u1ec7n M\u00e0n h\u00ecnh L\u1ecbch s\u1eed \u0111i\u1ec1u khi\u1ec3n thi\u1ebft b\u1ecb",
+      "style": "Normal"
+    },
+    {
+      "para_index": 298,
+      "text": " H\u00ecnh 6.4: Giao di\u1ec7n M\u00e0n h\u00ecnh H\u1ed3 s\u01a1 sinh vi\u00ean",
+      "style": "Normal"
+    },
+    {
+      "para_index": 302,
+      "text": "H\u00ecnh 6.5: Giao di\u1ec7n M\u00e0n h\u00ecnh H\u1ed3 s\u01a1 sinh vi\u00ean",
+      "style": "Normal"
+    },
+    {
+      "para_index": 341,
+      "text": "H\u00ecnh 7.1: M\u1ea1ch sau khi l\u1eafp r\u00e1p",
+      "style": "Normal"
+    },
+    {
+      "para_index": 440,
+      "text": "Ph\u00e2n t\u1ea7ng c\u00f4ng ngh\u1ec7",
+      "style": "Table Paragraph"
+    }
+  ],
+  "examples": {
+    "direct_paragraph_formatting": [
+      {
+        "para_index": 1,
+        "text": "",
+        "style": "Body Text"
+      },
+      {
+        "para_index": 2,
+        "text": "H\u1eccC VI\u1ec6N C\u00d4NG NGH\u1ec6 B\u01afU CH\u00cdNH VI\u1ec4N TH\u00d4NG",
+        "style": "Normal"
+      },
+      {
+        "para_index": 14,
+        "text": "",
+        "style": "Body Text"
+      },
+      {
+        "para_index": 15,
+        "text": "B\u00c1O C\u00c1O",
+        "style": "Heading 1"
+      },
+      {
+        "para_index": 16,
+        "text": "IOT V\u00c0 \u1ee8NG D\u1ee4NG",
+        "style": "Normal"
+      }
+    ],
+    "direct_run_formatting": [
+      {
+        "para_index": 2,
+        "run_text": "H\u1eccC",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "run_text": " ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "run_text": "VI\u1ec6N",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "run_text": " ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "run_text": "C\u00d4NG",
+        "style": "Normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}

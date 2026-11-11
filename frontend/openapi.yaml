@@ -1,0 +1,357 @@
+openapi: 3.0.3
+info:
+  title: Smart Home IoT API
+  version: 1.0.0
+  description: >-
+    REST API for the Smart Home IoT dashboard. The backend reads sensor samples
+    and device acknowledgements from MQTT and stores them in MySQL. Device
+    commands are sent asynchronously over MQTT.
+
+    Interactive control panel is available at `/api/console`, Swagger Editor at `/api/docs`, and the raw
+    specification at `/api/openapi.yaml`.
+
+    Dashboard reads and GET API operations are public. Only device-control POSTs
+    require the API password in `X-API-Password`. Use Swagger's Authorize control
+    to enter the password once. The configured password is `API_ACCESS_PASSWORD`
+    (defaults to B23DCCN787). Do not send MySQL or MQTT credentials to this API.
+servers:
+  - url: http://localhost:3000
+    description: Local development backend (change host/port to match .env)
+tags:
+  - name: System
+  - name: Authentication
+  - name: Sensors
+  - name: History
+  - name: Devices
+paths:
+  /api/auth/verify:
+    get:
+      tags: [Authentication]
+      summary: Verify the API password
+      security:
+        - ApiPassword: []
+      responses:
+        '200':
+          description: Password accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authenticated: { type: boolean, example: true }
+        '401':
+          description: Missing or incorrect API password
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /api/console:
+    get:
+      tags: [System]
+      summary: Open the combined IoT control panel
+      description: One page showing health, latest readings, device controls, sensor rows, and command history.
+      responses:
+        '200':
+          description: Smart Home API control panel
+          content:
+            text/html:
+              schema: { type: string }
+  /api/docs:
+    get:
+      tags: [System]
+      summary: Open Swagger Editor and live API preview
+      responses:
+        '200':
+          description: Swagger Editor page for this OpenAPI document
+          content:
+            text/html:
+              schema: { type: string }
+  /api:
+    get:
+      tags: [System]
+      summary: API discovery
+      description: Returns this API's name, OpenAPI document URL, and endpoint list.
+      responses:
+        '200':
+          description: API metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [name, openapi, endpoints]
+                properties:
+                  name: { type: string, example: Smart Home IoT API }
+                  openapi: { type: string, example: /api/openapi.yaml }
+                  endpoints:
+                    type: array
+                    items: { type: string }
+  /api/openapi.yaml:
+    get:
+      tags: [System]
+      summary: Download OpenAPI specification
+      responses:
+        '200':
+          description: OpenAPI 3.0 YAML document
+          content:
+            application/yaml:
+              schema: { type: string }
+  /api/health:
+    get:
+      tags: [System]
+      summary: Check backend dependencies and sensor freshness
+      description: sensorOnline is true when the backend received a complete MQTT sensor sample in the last 15 seconds.
+      responses:
+        '200':
+          description: Health status; ok indicates MySQL is reachable
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, mqttConnected, sensorOnline, lastSensorAt]
+                properties:
+                  ok: { type: boolean, example: true }
+                  mqttConnected: { type: boolean, example: true }
+                  sensorOnline: { type: boolean, example: true }
+                  lastSensorAt: { type: string, nullable: true, format: date-time, example: '2026-11-11T09:00:00+00:00' }
+              examples:
+                healthy:
+                  value: { ok: true, mqttConnected: true, sensorOnline: true, lastSensorAt: '2026-11-11T09:00:00+00:00' }
+        '503':
+          description: MySQL is unavailable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { ok: false, mqttConnected: true, sensorOnline: false }
+  /api/sensors/latest:
+    get:
+      tags: [Sensors]
+      summary: Get the latest reading for each sensor
+      responses:
+        '200':
+          description: Latest temperature, humidity, and light reading
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [temp, hum, light, time]
+                properties:
+                  temp: { type: number, format: float, description: Temperature in °C, example: 25.1 }
+                  hum: { type: number, format: float, description: Relative humidity in percent, example: 60.0 }
+                  light: { type: integer, description: LDR ADC reading from 0 to 1023; not calibrated lux, example: 700 }
+                  time: { type: string, description: Local database time, example: '2026-11-11 16:00:00' }
+              example: { temp: 25.1, hum: 60.0, light: 700, time: '2026-11-11 16:00:00' }
+        '404':
+          description: No complete set of sensor readings is available
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: Chưa có đủ dữ liệu cảm biến }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/sensors:
+    get:
+      tags: [Sensors]
+      summary: List sensor readings
+      description: Results are ordered newest first. Each stored sensor value is one row.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Sensor rows and pagination metadata
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/SensorRow' }
+              example:
+                data:
+                  - { id: 21, sensor: DHT11 Nhiệt độ, type: Nhiệt độ, value: 25.1, unit: '°C', time: '2026-11-11 16:00:00' }
+                total: 150
+                page: 1
+                limit: 50
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/history:
+    get:
+      tags: [History]
+      summary: List LED control history
+      description: Results are ordered newest first. A command history row is recorded when an MQTT acknowledgement is received.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: History rows and pagination metadata
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/HistoryRow' }
+              example:
+                data:
+                  - { id: 8, device: LED1, action: BẬT, desc: LED1_ON, status: Thành công, time: '2026-11-11 16:00:00' }
+                total: 8
+                page: 1
+                limit: 50
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/devices:
+    get:
+      tags: [Devices]
+      summary: List LED devices and current states
+      responses:
+        '200':
+          description: LED devices ordered by ID
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Device' }
+              example:
+                - { id: 1, name: LED1, state: OFF, on: false }
+                - { id: 2, name: LED2, state: ON, on: true }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/devices/{device_id}:
+    post:
+      tags: [Devices]
+      summary: Send an LED on/off command
+      security:
+        - ApiPassword: []
+      description: >-
+        Publishes `{device_id}_{ON|OFF}` to MQTT topic `device/control` with QoS 1.
+        HTTP 202 means the command was accepted for publishing, not that the LED
+        has already changed. The device later reports its result on
+        `device/status`; the backend then updates device state and history.
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          description: LED device ID (1 or 2)
+          schema: { type: integer, enum: [1, 2] }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [on]
+              properties:
+                on: { type: boolean, description: true turns the LED on; false turns it off }
+            examples:
+              turnOn: { value: { on: true } }
+              turnOff: { value: { on: false } }
+      responses:
+        '202':
+          description: Command accepted for MQTT publication
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deviceId, state, status]
+                properties:
+                  deviceId: { type: integer, example: 1 }
+                  state: { type: string, enum: [ON, OFF], example: ON }
+                  status: { type: string, enum: [PENDING], example: PENDING }
+              example: { deviceId: 1, state: ON, status: PENDING }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '400':
+          description: Invalid device ID or request body
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: Thiết bị hoặc trạng thái không hợp lệ }
+        '404':
+          description: Device not found in database
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: Không tìm thấy thiết bị }
+        '503':
+          description: MQTT broker disconnected or command could not be published
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                brokerDown: { value: { error: MQTT broker chưa kết nối } }
+                publishFailed: { value: { error: Không gửi được lệnh MQTT } }
+        '500': { $ref: '#/components/responses/ServerError' }
+components:
+  securitySchemes:
+    ApiPassword:
+      type: apiKey
+      in: header
+      name: X-API-Password
+      description: Enter the API password (default B23DCCN787) in Swagger's Authorize dialog.
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: 1-based page number. Invalid values fall back to 1; values below 1 are clamped to 1.
+      schema: { type: integer, default: 1, minimum: 1 }
+    Limit:
+      name: limit
+      in: query
+      description: Rows per page. Defaults to 50 and is clamped to the range 1–100. Sensor endpoint returns up to three rows per requested limit because it queries three sensor types.
+      schema: { type: integer, default: 50, minimum: 1, maximum: 100 }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string, example: Lỗi máy chủ }
+        message: { type: string, description: Included for framework HTTP errors }
+    PaginatedResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data: { type: array, items: {} }
+        total: { type: integer, example: 150 }
+        page: { type: integer, example: 1 }
+        limit: { type: integer, example: 50 }
+    SensorRow:
+      type: object
+      required: [id, sensor, type, value, unit, time]
+      properties:
+        id: { type: integer, example: 21 }
+        sensor: { type: string, example: DHT11 Nhiệt độ }
+        type: { type: string, example: Nhiệt độ }
+        value: { type: number, format: float, example: 25.1 }
+        unit: { type: string, example: '°C' }
+        time: { type: string, example: '2026-11-11 16:00:00' }
+    HistoryRow:
+      type: object
+      required: [id, device, action, desc, status, time]
+      properties:
+        id: { type: integer, example: 8 }
+        device: { type: string, example: LED1 }
+        action: { type: string, enum: [BẬT, TẮT], example: BẬT }
+        desc: { type: string, example: LED1_ON }
+        status: { type: string, enum: [Đang chờ, Thành công], example: Thành công }
+        time: { type: string, example: '2026-11-11 16:00:00' }
+    Device:
+      type: object
+      required: [id, name, state, on]
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: LED1 }
+        state: { type: string, enum: [ON, OFF], example: OFF }
+        on: { type: boolean, example: false }
+  responses:
+    Unauthorized:
+      description: Missing or incorrect API password
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Thiếu hoặc sai mật khẩu API, code: unauthorized }
+    ServerError:
+      description: Unexpected backend error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Lỗi máy chủ }
